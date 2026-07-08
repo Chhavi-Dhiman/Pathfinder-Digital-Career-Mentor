@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pathfinder : Digital Career Mentor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===================== ROOT / TOKENS ===================== */
+:root{
+  --bg:#07060c;
+  --bg-elev:#100c1c;
+  --bg-card:#150f24;
+  --line:#2a2140;
+  --purple-1:#7c3aed;
+  --purple-2:#a855f7;
+  --purple-glow:#c9a3ff;
+  --pink:#ec4899;
+  --pink-glow:#f472b6;
+  --text:#f3f0fa;
+  --text-dim:#a99fc0;
+  --text-faint:#6f6486;
+  --gold:#f0b95c;
+  --nav-bg-1:rgba(7,6,12,0.7);
+  --nav-bg-2:rgba(7,6,12,0.92);
+  --glow-1:rgba(124,58,237,0.25);
+  --glow-2:rgba(168,85,247,0.16);
+  --glow-3:rgba(124,58,237,0.14);
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+/* ---- Light theme override (toggled via body.light-theme) ---- */
+body.light-theme{
+  --bg:#f6f3fb;
+  --bg-elev:#efe9fb;
+  --bg-card:#ffffff;
+  --line:#e6e0f5;
+  --text:#1c1428;
+  --text-dim:#5c5372;
+  --text-faint:#8a80a3;
+  --nav-bg-1:rgba(246,243,251,0.75);
+  --nav-bg-2:rgba(246,243,251,0.94);
+  --glow-1:rgba(124,58,237,0.10);
+  --glow-2:rgba(236,72,153,0.08);
+  --glow-3:rgba(124,58,237,0.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  line-height:1.6;
+  transition:background .4s ease, color .4s ease;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important;}
+}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;}
+img{max-width:100%;display:block;}
+::selection{background:var(--purple-1);color:#fff;}
+
+
+/* background ambient glow */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 700px 500px at 15% -5%, var(--glow-1), transparent 60%),
+    radial-gradient(ellipse 600px 500px at 100% 20%, var(--glow-2), transparent 60%),
+    radial-gradient(ellipse 800px 600px at 50% 100%, var(--glow-3), transparent 60%);
+  pointer-events:none;
+  z-index:0;
+  transition:opacity .4s;
+}
+
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:0.72rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--purple-glow);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:14px;
+}
+.eyebrow::before{content:"";width:20px;height:1px;background:var(--purple-glow);}
+
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;letter-spacing:-0.01em;}
+.section-title{font-size:clamp(1.7rem,4vw,2.6rem);margin-bottom:10px;}
+.section-sub{color:var(--text-dim);max-width:560px;margin-bottom:44px;font-size:1rem;}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px;position:relative;z-index:1;}
+section{padding:100px 0;position:relative;}
+
+/* ===================== NAV ===================== */
+#navbar{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  background:var(--nav-bg-1);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+  transition:background .3s;
+}
+.nav-inner{
+  max-width:1180px;margin:0 auto;padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{
+  font-family:var(--font-display);font-weight:700;font-size:1.25rem;
+  display:flex;align-items:center;gap:8px;
+}
+.logo-dot{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,var(--purple-2),var(--gold));box-shadow:0 0 12px var(--purple-2);}
+.logo-tag{
+  font-family:var(--font-mono);font-weight:400;font-size:0.62rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text-faint);border-left:1px solid var(--line);padding-left:10px;margin-left:2px;
+}
+@media (max-width:640px){.logo-tag{display:none;}}
+.nav-links{display:flex;gap:32px;font-size:0.92rem;color:var(--text-dim);}
+.nav-links a{position:relative;padding:4px 0;transition:color .25s;}
+.nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:0;height:1px;background:var(--purple-glow);transition:width .3s;}
+.nav-links a:hover{color:var(--text);}
+.nav-links a:hover::after{width:100%;}
+.nav-cta{
+  background:linear-gradient(135deg,var(--purple-1),var(--purple-2));
+  padding:10px 20px;border-radius:100px;font-size:0.88rem;font-weight:600;color:#fff;
+  transition:transform .25s, box-shadow .25s;
+  box-shadow:0 0 0 rgba(168,85,247,0);
+}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,0.4), 0 0 16px rgba(236,72,153,0.4);}
+.burger{display:none;flex-direction:column;gap:5px;background:none;}
+.burger span{width:22px;height:2px;background:var(--text);}
+.theme-toggle{
+  display:flex;align-items:center;gap:7px;
+  background:var(--bg-card);border:1px solid var(--line);
+  padding:8px 14px;border-radius:100px;font-size:0.82rem;color:var(--text-dim);
+  transition:all .3s;
+}
+.theme-toggle:hover{border-color:var(--pink-glow);color:var(--text);box-shadow:0 0 14px rgba(236,72,153,0.25);transform:translateY(-2px);}
+.theme-toggle #theme-icon{font-size:0.95rem;transition:transform .4s;}
+.theme-toggle:hover #theme-icon{transform:rotate(20deg);}
+@media (max-width:640px){.theme-toggle #theme-label{display:none;} .theme-toggle{padding:8px 10px;}}
+
+/* ===================== BUTTONS ===================== */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 28px;border-radius:100px;font-weight:600;font-size:0.95rem;
+  transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s, background .25s, background-position .5s, border-color .25s;
+}
+.btn-primary{background:linear-gradient(135deg,var(--purple-1),var(--purple-2));color:#fff;background-size:160% 160%;background-position:0% 50%;}
+.btn-primary:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 14px 34px rgba(124,58,237,0.45), 0 0 24px rgba(236,72,153,0.4);background-position:100% 50%;}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+.btn-ghost:hover{border-color:var(--pink-glow);background:rgba(236,72,153,0.08);transform:translateY(-2px);box-shadow:0 0 18px rgba(236,72,153,0.22);}
+.btn-small{padding:9px 18px;font-size:0.85rem;}
+
+/* ===================== HERO ===================== */
+#hero{padding:170px 0 120px;text-align:center;position:relative;}
+.hero-headline{
+  font-size:clamp(2.4rem,6.4vw,4.6rem);
+  line-height:1.05;
+  max-width:900px;margin:0 auto 22px;
+}
+.hero-headline .grad{
+  background:linear-gradient(135deg,var(--purple-glow),var(--gold));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero-sub{color:var(--text-dim);max-width:560px;margin:0 auto 40px;font-size:1.08rem;}
+.hero-cta-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:64px;}
+.hero-stats{display:flex;justify-content:center;gap:56px;flex-wrap:wrap;}
+.hero-stat b{display:block;font-family:var(--font-display);font-size:1.7rem;color:var(--purple-glow);}
+.hero-stat span{font-size:0.8rem;color:var(--text-faint);font-family:var(--font-mono);letter-spacing:.05em;}
+
+/* floating path dots in hero background */
+.path-orb{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle,var(--purple-2),transparent 70%);
+  filter:blur(2px);opacity:0.55;
+  animation:float 7s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0px);}50%{transform:translateY(-22px);}}
+
+/* ===================== CARDS GENERIC ===================== */
+.card{
+  background:linear-gradient(180deg,var(--bg-card),var(--bg-elev));
+  border:1px solid var(--line);
+  border-radius:18px;
+  position:relative;
+  transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s, box-shadow .35s;
+}
+.card::before{
+  content:"";
+  position:absolute;inset:-1px;
+  border-radius:18px;
+  padding:1px;
+  background:linear-gradient(135deg,var(--pink),transparent 40%,var(--purple-2) 70%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  opacity:0;
+  transition:opacity .4s;
+  pointer-events:none;
+}
+.card:hover{
+  transform:translateY(-8px) scale(1.015);
+  border-color:rgba(236,72,153,0.45);
+  box-shadow:0 22px 44px rgba(0,0,0,0.5), 0 0 26px rgba(236,72,153,0.28), 0 0 60px rgba(168,85,247,0.18);
+}
+.card:hover::before{opacity:1;}
+
+/* reveal on scroll */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1);}
+.reveal.in{opacity:1;transform:translateY(0);}
+
+/* ===================== CAREER GRID ===================== */
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;}
+.filter-chip{
+  padding:8px 16px;border-radius:100px;border:1px solid var(--line);
+  font-size:0.82rem;color:var(--text-dim);background:transparent;transition:all .25s;
+}
+.filter-chip{transition:all .25s;}
+.filter-chip.active,.filter-chip:hover{background:rgba(236,72,153,0.14);border-color:var(--pink-glow);color:var(--text);box-shadow:0 0 14px rgba(236,72,153,0.25);}
+
+.career-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px;}
+.career-card{padding:26px 24px;cursor:pointer;}
+.career-icon{font-size:1.9rem;margin-bottom:14px;display:inline-block;transition:transform .4s cubic-bezier(.2,.8,.2,1), filter .4s;}
+.career-card:hover .career-icon{transform:scale(1.18) rotate(-6deg);filter:drop-shadow(0 0 14px rgba(236,72,153,0.65));}
+.career-card h3{font-size:1.12rem;margin-bottom:8px;}
+.career-card p{color:var(--text-dim);font-size:0.87rem;margin-bottom:16px;}
+.career-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.career-tag{font-size:0.68rem;font-family:var(--font-mono);padding:3px 9px;border-radius:100px;background:rgba(124,58,237,0.15);color:var(--purple-glow);}
+.career-open{font-size:0.85rem;color:var(--purple-glow);font-weight:600;display:flex;align-items:center;gap:6px;transition:color .3s;}
+.career-open span{transition:transform .25s;}
+.career-card:hover .career-open{color:var(--pink-glow);}
+.career-card:hover .career-open span{transform:translateX(5px);}
+
+/* ===================== CAREER DETAIL MODAL ===================== */
+#career-modal{
+  position:fixed;inset:0;z-index:900;display:none;
+  background:rgba(4,3,8,0.82);backdrop-filter:blur(6px);
+  align-items:flex-start;justify-content:center;
+  overflow-y:auto;padding:60px 16px;
+}
+#career-modal.open{display:flex;}
+.modal-panel{
+  background:var(--bg-elev);
+  border:1px solid var(--line);
+  border-radius:22px;
+  max-width:820px;width:100%;
+  padding:44px 40px 50px;
+  position:relative;
+  animation:modalIn .4s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(24px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.modal-close{
+  position:absolute;top:22px;right:22px;
+  width:36px;height:36px;border-radius:50%;background:var(--bg-card);
+  border:1px solid var(--line);color:var(--text-dim);font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;transition:all .25s;
+}
+.modal-close:hover{background:var(--purple-1);color:#fff;transform:rotate(90deg);}
+.modal-head{display:flex;align-items:center;gap:16px;margin-bottom:8px;}
+.modal-head .icon{font-size:2.4rem;}
+.modal-time{
+  font-family:var(--font-mono);font-size:0.78rem;color:var(--gold);
+  border:1px solid rgba(240,185,92,0.35);padding:4px 12px;border-radius:100px;display:inline-block;margin:14px 0 24px;
+}
+.modal-section-label{
+  font-family:var(--font-mono);font-size:0.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--purple-glow);margin:30px 0 14px;
+}
+.skill-pill-row{display:flex;flex-wrap:wrap;gap:8px;}
+.skill-pill{background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);padding:6px 14px;border-radius:100px;font-size:0.82rem;transition:all .25s;}
+.skill-pill:hover{border-color:var(--pink-glow);background:rgba(236,72,153,0.15);box-shadow:0 0 12px rgba(236,72,153,0.3);transform:translateY(-2px);}
+
+/* roadmap path (signature element) */
+.roadmap-path{position:relative;padding-left:34px;}
+.roadmap-path::before{
+  content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;
+  background:repeating-linear-gradient(180deg,var(--purple-2) 0 6px, transparent 6px 12px);
+}
+.road-step{position:relative;margin-bottom:26px;}
+.road-step::before{
+  content:"";position:absolute;left:-34px;top:2px;width:20px;height:20px;border-radius:50%;
+  background:var(--bg-elev);border:2px solid var(--purple-2);
+  box-shadow:0 0 10px rgba(168,85,247,0.5);
+}
+.road-step h4{font-size:0.98rem;margin-bottom:4px;}
+.road-step p{color:var(--text-dim);font-size:0.87rem;}
+
+.resource-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;}
+.resource-col h5{font-size:0.8rem;color:var(--gold);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.resource-col ul{list-style:none;}
+.resource-col li{font-size:0.85rem;color:var(--text-dim);padding:5px 0;padding-left:14px;position:relative;}
+.resource-col li::before{content:"›";position:absolute;left:0;color:var(--purple-glow);}
+
+.premium-box{
+  margin-top:30px;padding:24px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(124,58,237,0.18),rgba(240,185,92,0.08));
+  border:1px solid rgba(168,85,247,0.35);
+  animation:premiumPulse 3.2s ease-in-out infinite;
+}
+@keyframes premiumPulse{
+  0%,100%{box-shadow:0 0 0 rgba(236,72,153,0);}
+  50%{box-shadow:0 0 30px rgba(236,72,153,0.18);}
+}
+.premium-box h4{font-size:1.02rem;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.premium-box ul{list-style:none;margin-bottom:18px;}
+.premium-box li{font-size:0.87rem;color:var(--text-dim);padding:4px 0;padding-left:18px;position:relative;}
+.premium-box li::before{content:"✦";position:absolute;left:0;color:var(--gold);font-size:0.75rem;}
+
+.tip-box{margin-top:24px;padding:16px 20px;border-left:3px solid var(--gold);background:rgba(240,185,92,0.06);border-radius:0 10px 10px 0;font-size:0.87rem;color:var(--text-dim);font-style:italic;}
+
+/* ===================== QUIZ ===================== */
+#quiz-area{
+  background:radial-gradient(ellipse 900px 500px at 50% 0%, rgba(124,58,237,0.22), transparent 70%);
+  border:1px solid var(--line);
+  border-radius:26px;
+  padding:50px 40px;
+  max-width:720px;margin:0 auto;
+  position:relative;
+  overflow:hidden;
+}
+.quiz-progress-track{display:flex;gap:6px;margin-bottom:34px;}
+.quiz-dot{flex:1;height:5px;border-radius:100px;background:var(--line);transition:background .4s;}
+.quiz-dot.filled{background:linear-gradient(90deg,var(--purple-1),var(--purple-2));box-shadow:0 0 8px rgba(168,85,247,0.6);}
+.quiz-count{font-family:var(--font-mono);font-size:0.76rem;color:var(--text-faint);letter-spacing:.06em;margin-bottom:18px;}
+
+#quiz-start{text-align:center;padding:20px 0;}
+#quiz-start p{color:var(--text-dim);max-width:420px;margin:14px auto 30px;}
+
+.quiz-question-wrap{display:none;}
+.quiz-question-wrap.active{display:block;animation:qFade .45s ease;}
+@keyframes qFade{from{opacity:0;transform:translateX(18px);}to{opacity:1;transform:translateX(0);}}
+.quiz-q-title{font-size:1.35rem;font-family:var(--font-display);margin-bottom:26px;line-height:1.4;}
+.quiz-options{display:grid;gap:12px;margin-bottom:26px;}
+.quiz-option{
+  text-align:left;padding:16px 20px;border-radius:14px;
+  background:var(--bg-card);border:1px solid var(--line);
+  font-size:0.96rem;color:var(--text);
+  display:flex;align-items:center;gap:14px;
+  transition:all .25s;
+}
+.quiz-option .letter{
+  width:28px;height:28px;border-radius:8px;background:rgba(168,85,247,0.14);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.78rem;color:var(--purple-glow);flex-shrink:0;
+  transition:all .25s;
+}
+.quiz-option:hover{border-color:var(--pink-glow);background:rgba(236,72,153,0.08);transform:translateX(4px);box-shadow:0 6px 20px rgba(236,72,153,0.18);}
+.quiz-option.selected{border-color:var(--purple-2);background:rgba(168,85,247,0.22);box-shadow:0 0 22px rgba(236,72,153,0.3);}
+.quiz-option.selected .letter{background:linear-gradient(135deg,var(--purple-2),var(--pink));color:#fff;}
+.quiz-nav-row{display:flex;justify-content:space-between;align-items:center;}
+.quiz-back-btn{
+  font-size:0.85rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;
+  padding:8px 6px;transition:color .2s;
+}
+.quiz-back-btn:hover{color:var(--purple-glow);}
+.quiz-back-btn:disabled{opacity:0;pointer-events:none;}
+.quiz-hint{font-size:0.78rem;color:var(--text-faint);font-family:var(--font-mono);}
+
+/* loading state */
+#quiz-loading{display:none;text-align:center;padding:60px 0;}
+#quiz-loading.active{display:block;}
+.loader-orb{
+  width:64px;height:64px;margin:0 auto 26px;border-radius:50%;
+  border:3px solid var(--line);border-top-color:var(--purple-2);
+  animation:spin 0.9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-msg{font-family:var(--font-mono);font-size:0.85rem;color:var(--text-dim);letter-spacing:.03em;}
+
+/* results */
+#quiz-results{display:none;}
+#quiz-results.active{display:block;}
+.result-heading{text-align:center;margin-bottom:34px;}
+.result-heading .eyebrow{justify-content:center;}
+.result-heading .eyebrow::before{display:none;}
+.result-card{
+  display:flex;gap:20px;align-items:flex-start;
+  background:var(--bg-card);border:1px solid var(--line);border-radius:16px;
+  padding:22px 24px;margin-bottom:16px;
+  opacity:0;transform:translateY(30px) scale(0.92);
+  animation:bounceIn 0.7s cubic-bezier(.34,1.56,.64,1) forwards;
+  animation-play-state:running;
+  transition:box-shadow .3s, border-color .3s, transform .3s;
+}
+.result-card:hover{border-color:rgba(236,72,153,0.45);box-shadow:0 14px 32px rgba(236,72,153,0.18);}
+@keyframes bounceIn{
+  0%{opacity:0;transform:translateY(30px) scale(0.9);}
+  60%{opacity:1;transform:translateY(-6px) scale(1.02);}
+  100%{opacity:1;transform:translateY(0) scale(1);}
+}
+.result-rank{
+  font-family:var(--font-display);font-size:1.5rem;color:var(--gold);
+  width:44px;height:44px;border-radius:12px;background:rgba(240,185,92,0.1);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.result-card h3{font-size:1.1rem;margin-bottom:6px;}
+.result-card p{color:var(--text-dim);font-size:0.87rem;margin-bottom:10px;}
+.result-match{font-family:var(--font-mono);font-size:0.72rem;color:var(--purple-glow);}
+.quiz-retake{text-align:center;margin-top:30px;}
+
+/* ===================== MENTORS ===================== */
+.mentor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px;}
+.mentor-card{padding:26px;text-align:center;box-shadow:0 0 0 1px rgba(236,72,153,0.12), 0 12px 30px rgba(236,72,153,0.08);}
+.mentor-avatar{
+  width:72px;height:72px;border-radius:50%;margin:0 auto 16px;
+  background:linear-gradient(135deg,var(--purple-1),var(--gold));
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-family:var(--font-display);color:#fff;
+  transition:box-shadow .4s, transform .4s;
+  box-shadow:0 0 0 rgba(236,72,153,0);
+}
+.mentor-card:hover .mentor-avatar{
+  box-shadow:0 0 0 4px rgba(236,72,153,0.15), 0 0 26px rgba(236,72,153,0.55);
+  transform:scale(1.08);
+}
+.mentor-card h3{font-size:1.05rem;margin-bottom:4px;}
+.mentor-role{color:var(--purple-glow);font-size:0.82rem;margin-bottom:6px;}
+.mentor-exp{color:var(--text-faint);font-size:0.78rem;font-family:var(--font-mono);margin-bottom:16px;}
+.mentor-price{font-size:1.15rem;font-family:var(--font-display);color:var(--gold);margin-bottom:16px;}
+.mentor-price span{font-size:0.72rem;color:var(--text-faint);font-family:var(--font-body);}
+
+.explore-more-wrap{text-align:center;margin-top:36px;}
+.hidden-set{display:none;}
+.hidden-set.show{display:grid;animation:qFade .5s ease;}
+.hidden-set.show.flex-grid{display:grid;}
+
+/* ===================== COURSES ===================== */
+.course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;}
+.course-card{padding:0;overflow:hidden;box-shadow:0 0 0 1px rgba(236,72,153,0.12), 0 12px 30px rgba(236,72,153,0.08);}
+.course-top{padding:24px 24px 0;}
+.course-badge{
+  display:inline-block;font-family:var(--font-mono);font-size:0.68rem;letter-spacing:.06em;
+  color:var(--gold);border:1px solid rgba(240,185,92,0.35);padding:3px 10px;border-radius:100px;margin-bottom:14px;
+}
+.course-card h3{font-size:1.08rem;margin-bottom:10px;}
+.course-outcomes{list-style:none;margin-bottom:16px;}
+.course-outcomes li{font-size:0.83rem;color:var(--text-dim);padding:4px 0;padding-left:18px;position:relative;}
+.course-outcomes li::before{content:"✓";position:absolute;left:0;color:var(--purple-glow);}
+.course-bottom{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 24px;border-top:1px solid var(--line);background:rgba(255,255,255,0.02);
+}
+.course-badge{transition:all .3s;}
+.course-card:hover .course-badge{border-color:var(--pink-glow);color:var(--pink-glow);box-shadow:0 0 12px rgba(236,72,153,0.3);}
+.course-price{font-family:var(--font-display);font-size:1.2rem;transition:text-shadow .3s;}
+.course-card:hover .course-price{text-shadow:0 0 16px rgba(236,72,153,0.45);}
+.course-price .old{font-size:0.78rem;color:var(--text-faint);text-decoration:line-through;font-family:var(--font-body);margin-right:6px;}
+.course-duration{font-size:0.72rem;color:var(--text-faint);font-family:var(--font-mono);}
+
+/* ===================== RESUME REVIEW ===================== */
+.resume-box{
+  max-width:640px;margin:0 auto;text-align:center;
+  border:2px dashed var(--line);border-radius:20px;padding:56px 36px;
+  transition:border-color .3s, background .3s;
+}
+.resume-box:hover{border-color:var(--pink-glow);background:rgba(236,72,153,0.05);box-shadow:0 0 30px rgba(236,72,153,0.15);}
+.resume-icon{font-size:2.4rem;margin-bottom:18px;}
+.resume-box p{color:var(--text-dim);margin-bottom:22px;font-size:0.92rem;}
+.resume-feedback{
+  display:none;text-align:left;margin-top:30px;padding:22px;background:var(--bg-card);border-radius:14px;border:1px solid var(--line);
+}
+.resume-feedback.show{display:block;animation:qFade .5s ease;}
+.resume-feedback h4{font-size:0.95rem;margin-bottom:12px;color:var(--purple-glow);}
+.resume-feedback ul{list-style:none;}
+.resume-feedback li{font-size:0.85rem;color:var(--text-dim);padding:5px 0;padding-left:16px;position:relative;}
+.resume-feedback li::before{content:"—";position:absolute;left:0;color:var(--gold);}
+
+/* ===================== MOTIVATION STRIP ===================== */
+.motivation-strip{
+  overflow:hidden;white-space:nowrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:18px 0;background:var(--bg-elev);
+}
+.motivation-track{display:inline-flex;gap:60px;animation:scrollLeft 32s linear infinite;}
+.motivation-track span{font-family:var(--font-display);font-size:1.05rem;color:var(--text-faint);}
+.motivation-track span b{color:var(--purple-glow);font-weight:600;}
+@keyframes scrollLeft{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ===================== ABOUT / CONTACT ===================== */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.about-grid p{color:var(--text-dim);margin-bottom:16px;}
+.contact-form{display:grid;gap:14px;max-width:460px;}
+.contact-form input,.contact-form textarea{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:12px;
+  padding:14px 16px;color:var(--text);font-family:var(--font-body);font-size:0.92rem;
+  transition:border-color .25s, box-shadow .25s;
+}
+.contact-form input:focus,.contact-form textarea:focus{outline:none;border-color:var(--purple-glow);box-shadow:0 0 0 3px rgba(168,85,247,0.15);}
+.contact-form textarea{resize:vertical;min-height:110px;}
+
+/* ===================== FOOTER ===================== */
+footer{border-top:1px solid var(--line);padding:44px 0 30px;text-align:center;color:var(--text-faint);font-size:0.82rem;}
+footer .logo{justify-content:center;margin-bottom:12px;}
+
+/* toast */
+#toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--bg-card);border:1px solid var(--purple-glow);color:var(--text);
+  padding:14px 26px;border-radius:100px;font-size:0.88rem;z-index:999;opacity:0;pointer-events:none;
+  transition:all .35s cubic-bezier(.2,.8,.2,1);box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width:860px){
+  .nav-links{display:none;}
+  .burger{display:flex;}
+  .about-grid{grid-template-columns:1fr;}
+  section{padding:70px 0;}
+  #hero{padding:130px 0 80px;}
+  #quiz-area{padding:34px 22px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== NAV ===================== -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <div class="logo"><span class="logo-dot"></span>Pathfinder<span class="logo-tag">Digital Career Mentor</span></div>
+    <div class="nav-links">
+      <a href="javascript:void(0)" onclick="goTo('careers')">Careers</a>
+      <a href="javascript:void(0)" onclick="goTo('quiz')">Quiz</a>
+      <a href="javascript:void(0)" onclick="goTo('mentorship')">Mentorship</a>
+      <a href="javascript:void(0)" onclick="goTo('courses')">Courses</a>
+      <a href="javascript:void(0)" onclick="goTo('about')">About</a>
+      <a href="javascript:void(0)" onclick="goTo('contact')">Contact</a>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark theme">
+      <span id="theme-icon">🌙</span><span id="theme-label">Dark</span>
+    </button>
+    <a href="javascript:void(0)" class="nav-cta" onclick="goTo('quiz')">Find Your Path</a>
+    <button class="burger" onclick="toggleMobileNav()"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<section id="hero">
+  <div class="path-orb" style="width:120px;height:120px;top:120px;left:8%;"></div>
+  <div class="path-orb" style="width:80px;height:80px;top:260px;right:10%;animation-delay:2s;"></div>
+  <div class="path-orb" style="width:60px;height:60px;bottom:60px;left:20%;animation-delay:4s;"></div>
+  <div class="wrap">
+    <div class="eyebrow" style="justify-content:center;">Your digital mentor, 24/7</div>
+    <h1 class="hero-headline">Confused about your career? <span class="grad">Let's find your path — together.</span></h1>
+    <p class="hero-sub">Pathfinder guides school and college students through career discovery, skill roadmaps, mentorship and real resources — like a mentor who never sleeps.</p>
+    <div class="hero-cta-row">
+      <a href="javascript:void(0)" class="btn btn-primary" onclick="goTo('quiz')">🧭 Find Your Career Path</a>
+      <a href="javascript:void(0)" class="btn btn-ghost" onclick="goTo('careers')">Explore Careers</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><b>15+</b><span>CAREER PATHS</span></div>
+      <div class="hero-stat"><b>12</b><span>QUIZ QUESTIONS</span></div>
+      <div class="hero-stat"><b>6</b><span>EXPERT MENTORS</span></div>
+      <div class="hero-stat"><b>₹299</b><span>STARTING SESSION</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- motivation strip -->
+<div class="motivation-strip">
+  <div class="motivation-track" id="motivation-track"></div>
+</div>
+
+<!-- ===================== CAREERS ===================== -->
+<section id="careers">
+  <div class="wrap">
+    <div class="eyebrow">Explore</div>
+    <h2 class="section-title reveal">15 careers. One clear starting point.</h2>
+    <p class="section-sub reveal">Tap any card to see the free roadmap, required skills, resources and a premium plan.</p>
+    <div class="filter-row" id="filter-row"></div>
+    <div class="career-grid" id="career-grid-visible"></div>
+    <div class="career-grid hidden-set" id="career-grid-hidden"></div>
+    <div class="explore-more-wrap" id="career-explore-wrap"><button class="btn btn-ghost" id="career-explore-btn" onclick="revealMore('career-grid-hidden', this)">Explore more careers →</button></div>
+  </div>
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section id="quiz">
+  <div class="wrap">
+    <div class="eyebrow" style="justify-content:center;display:flex;">Career quiz</div>
+    <h2 class="section-title reveal" style="text-align:center;">Not sure where to start?</h2>
+    <p class="section-sub reveal" style="margin:0 auto 44px;text-align:center;">Answer 12 quick questions about your interests, skills and personality. One tap moves you forward — no "Next" button needed.</p>
+
+    <div id="quiz-area">
+      <div id="quiz-start">
+        <div style="font-size:2.4rem;margin-bottom:10px;">🧠</div>
+        <h3 style="font-size:1.3rem;">The Pathfinder Career Quiz</h3>
+        <p>Choose one option per question — it moves forward automatically. Changed your mind? Use the back button anytime.</p>
+        <button class="btn btn-primary" onclick="startQuiz()">Start the Quiz →</button>
+      </div>
+
+      <div id="quiz-live" style="display:none;">
+        <div class="quiz-progress-track" id="quiz-progress-track"></div>
+        <div class="quiz-count" id="quiz-count">Question 1 of 12</div>
+        <div id="quiz-questions-holder"></div>
+        <div class="quiz-nav-row">
+          <button class="quiz-back-btn" id="quiz-back-btn" onclick="quizBack()">← Back</button>
+          <span class="quiz-hint">Tap an option to continue</span>
+        </div>
+      </div>
+
+      <div id="quiz-loading">
+        <div class="loader-orb"></div>
+        <div class="loading-msg" id="loading-msg">Matching your answers to real careers…</div>
+      </div>
+
+      <div id="quiz-results">
+        <div class="result-heading">
+          <div class="eyebrow">Your results</div>
+          <h3 style="font-size:1.5rem;">Careers that fit you best</h3>
+        </div>
+        <div id="result-cards-holder"></div>
+        <div class="quiz-retake"><button class="btn btn-ghost btn-small" onclick="resetQuiz()">↺ Retake the quiz</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MENTORSHIP ===================== -->
+<section id="mentorship">
+  <div class="wrap">
+    <div class="eyebrow">1:1 mentorship</div>
+    <h2 class="section-title reveal">Talk to someone who's already there.</h2>
+    <p class="section-sub reveal">Book a real conversation with a mentor working in the field you're curious about.</p>
+    <div class="mentor-grid" id="mentor-grid-visible"></div>
+    <div class="mentor-grid hidden-set" id="mentor-grid-hidden"></div>
+    <div class="explore-more-wrap"><button class="btn btn-ghost" onclick="revealMore('mentor-grid-hidden', this)">Explore more mentors →</button></div>
+  </div>
+</section>
+
+<!-- ===================== COURSES ===================== -->
+<section id="courses">
+  <div class="wrap">
+    <div class="eyebrow">Paid courses & bundles</div>
+    <h2 class="section-title reveal">Go deeper with a structured bundle.</h2>
+    <p class="section-sub reveal">Every bundle includes projects, mentor check-ins and a certificate.</p>
+    <div class="course-grid" id="course-grid-visible"></div>
+    <div class="course-grid hidden-set" id="course-grid-hidden"></div>
+    <div class="explore-more-wrap"><button class="btn btn-ghost" onclick="revealMore('course-grid-hidden', this)">Explore more courses →</button></div>
+  </div>
+</section>
+
+<!-- ===================== RESUME REVIEW ===================== -->
+<section id="resume">
+  <div class="wrap">
+    <div class="eyebrow" style="justify-content:center;display:flex;">Resume review</div>
+    <h2 class="section-title reveal" style="text-align:center;">Get your resume checked before you apply.</h2>
+    <p class="section-sub reveal" style="margin:0 auto 44px;text-align:center;">Upload your resume and our mentors will point out exactly what to fix.</p>
+    <div class="resume-box" id="resume-box" onclick="mockResumeUpload()">
+      <div class="resume-icon">📄</div>
+      <h3 style="margin-bottom:10px;">Drop your resume here or tap to upload</h3>
+      <p>PDF or DOCX, up to 5MB. This is a preview — feedback below is a sample.</p>
+      <button class="btn btn-primary btn-small">Upload Resume</button>
+      <div class="resume-feedback" id="resume-feedback">
+        <h4>✦ Sample mentor feedback</h4>
+        <ul>
+          <li>Add a one-line summary at the top stating your target role.</li>
+          <li>Quantify achievements — replace "worked on a project" with real numbers.</li>
+          <li>Move skills section higher up; recruiters scan the top third first.</li>
+          <li>Keep it to one page if you have under 3 years of experience.</li>
+          <li>Use consistent bullet formatting throughout.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ABOUT ===================== -->
+<section id="about">
+  <div class="wrap about-grid">
+    <div>
+      <div class="eyebrow">About Pathfinder</div>
+      <h2 class="section-title reveal">Built for students who feel stuck.</h2>
+      <p class="reveal">Most students don't lack talent — they lack a clear next step. Pathfinder breaks career decisions into small, honest steps: understand your interests, see the real roadmap, learn from free resources, and talk to someone who's walked the path.</p>
+      <p class="reveal">No jargon. No overwhelm. Just a mentor in your pocket.</p>
+      <a href="javascript:void(0)" class="btn btn-primary reveal" onclick="goTo('quiz')">Start with the quiz</a>
+    </div>
+    <div class="card reveal" style="padding:34px;">
+      <h3 style="margin-bottom:18px;">Why students trust Pathfinder</h3>
+      <ul style="list-style:none;display:grid;gap:14px;">
+        <li style="color:var(--text-dim);font-size:0.92rem;">🎯 Every roadmap is broken into small, doable steps</li>
+        <li style="color:var(--text-dim);font-size:0.92rem;">📚 Free resources first — pay only when you want to go deeper</li>
+        <li style="color:var(--text-dim);font-size:0.92rem;">👨‍🏫 Real mentors, not just articles</li>
+        <li style="color:var(--text-dim);font-size:0.92rem;">💬 Simple language, zero confusing jargon</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTACT ===================== -->
+<section id="contact">
+  <div class="wrap">
+    <div class="eyebrow">Get in touch</div>
+    <h2 class="section-title reveal">Questions? We're here to help.</h2>
+    <p class="section-sub reveal">Reach out and a mentor from our team will respond within a day.</p>
+    <form class="contact-form reveal" onsubmit="handleContact(event)">
+      <input type="text" placeholder="Your name" required>
+      <input type="email" placeholder="Your email" required>
+      <textarea placeholder="What's on your mind?" required></textarea>
+      <button type="submit" class="btn btn-primary">Send Message</button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="logo"><span class="logo-dot"></span>Pathfinder<span class="logo-tag">Digital Career Mentor</span></div>
+  <p>Guiding students to careers they'll love — one honest step at a time.</p>
+  <p style="margin-top:10px;">© 2026 Pathfinder. Built for students, by students.</p>
+</footer>
+
+<!-- ===================== CAREER DETAIL MODAL ===================== -->
+<div id="career-modal">
+  <div class="modal-panel" id="modal-panel-content"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ========================================================================
+   DATA: 15 CAREERS
+======================================================================== */
+const careers = [
+{id:"webdev",name:"Web Development",icon:"💻",tagline:"Build the websites and apps people use every day.",
+ desc:"Web developers design and build the websites and web apps we use daily — from shopping sites to banking apps. It blends logic, creativity and constant learning.",
+ skills:["HTML & CSS","JavaScript","Problem solving","Basic Git","Responsive design"],
+ roadmap:[
+   {t:"Learn the basics",d:"Master HTML, CSS and JavaScript fundamentals through small practice pages."},
+   {t:"Build real pages",d:"Recreate 3-4 simple websites (portfolio, landing page, to-do app) to build muscle memory."},
+   {t:"Learn a framework",d:"Pick up React or a similar framework once fundamentals feel solid."},
+   {t:"Ship projects & apply",d:"Build 2-3 portfolio projects, host them online, and start applying for internships."}
+ ],
+ time:"6–9 months to job-ready basics",
+ tips:"Don't jump to frameworks too early — a strong HTML/CSS/JS base makes everything else easier.",
+ resources:{youtube:["CodeWithHarry","Traversy Media","freeCodeCamp"],blogs:["MDN Web Docs","CSS-Tricks","dev.to"],tools:["VS Code","CodePen","Chrome DevTools"],courses:["freeCodeCamp Responsive Web Design","The Odin Project"]},
+ premium:["12-week structured build plan","3 real client-style projects","Deployment & GitHub portfolio setup","Mock technical interviews"]},
+
+{id:"datasci",name:"Data Science",icon:"📊",tagline:"Turn raw numbers into decisions that matter.",
+ desc:"Data scientists find patterns in data to help companies make better decisions — from predicting sales to detecting fraud. Strong in math, code and curiosity.",
+ skills:["Python","Statistics","Excel","SQL basics","Logical thinking"],
+ roadmap:[
+   {t:"Build number sense",d:"Strengthen statistics and basic math — averages, probability, distributions."},
+   {t:"Learn Python for data",d:"Get comfortable with Python, pandas and simple data cleaning."},
+   {t:"Visualize & analyze",d:"Practice with real public datasets, build charts, draw conclusions."},
+   {t:"Learn ML basics",d:"Understand basic machine learning concepts and build a first model."}
+ ],
+ time:"8–12 months for solid fundamentals",
+ tips:"Work with messy, real datasets early — clean textbook data won't prepare you for the real world.",
+ resources:{youtube:["Krish Naik","StatQuest","CampusX"],blogs:["Towards Data Science","Kaggle Blog"],tools:["Jupyter Notebook","Google Colab","Kaggle"],courses:["Kaggle Learn (free)","Google Data Analytics"]},
+ premium:["Real dataset projects with mentor review","End-to-end ML mini project","Resume tailored for analyst/DS roles","Interview case-study practice"]},
+
+{id:"digitalmarketing",name:"Digital Marketing",icon:"📱",tagline:"Help brands get seen and grow, online.",
+ desc:"Digital marketers help businesses reach the right audience through social media, ads, SEO and content — a fast-moving, creative-meets-analytical field.",
+ skills:["Content writing","Basic analytics","Social media sense","Communication","Creativity"],
+ roadmap:[
+   {t:"Understand the landscape",d:"Learn the basics of SEO, social media, email and paid ads."},
+   {t:"Practice on a real page",d:"Run a small Instagram page or blog to practice content and growth."},
+   {t:"Learn analytics",d:"Get comfortable reading engagement and traffic data to see what's working."},
+   {t:"Try paid campaigns",d:"Run a small budget ad campaign (even ₹500) to learn targeting basics."}
+ ],
+ time:"4–6 months to start freelancing",
+ tips:"Marketing rewards people who actually experiment — start a small project today, not next month.",
+ resources:{youtube:["Neil Patel","Simplilearn Marketing","Think with Google"],blogs:["HubSpot Blog","Moz Blog"],tools:["Canva","Google Analytics","Meta Business Suite"],courses:["Google Digital Garage (free)","HubSpot Academy"]},
+ premium:["Live campaign planning with a mentor","SEO + social strategy toolkit","Portfolio of 3 sample campaigns","Freelance client pitch templates"]},
+
+{id:"graphicdesign",name:"Graphic Designing",icon:"🎨",tagline:"Turn ideas into visuals people remember.",
+ desc:"Graphic designers create the visuals for brands — logos, posters, social posts, packaging. A career for people who think in color, shape and layout.",
+ skills:["Design principles","Color theory","Typography","Software basics","Creativity"],
+ roadmap:[
+   {t:"Learn design basics",d:"Study color theory, typography and layout principles."},
+   {t:"Learn the tools",d:"Get hands-on with Canva first, then Figma or Photoshop."},
+   {t:"Recreate & remix",d:"Recreate designs you admire to understand why they work."},
+   {t:"Build a portfolio",d:"Design 8-10 original pieces across posters, logos and social posts."}
+ ],
+ time:"5–7 months to a solid portfolio",
+ tips:"Study bad designs too — knowing what doesn't work sharpens your eye faster.",
+ resources:{youtube:["Flux Academy","The Futur","Satori Graphics"],blogs:["Behance","Dribbble"],tools:["Figma","Canva","Adobe Photoshop"],courses:["Canva Design School (free)","Coursera Graphic Design Basics"]},
+ premium:["Personal brand & portfolio website","Real brief simulation projects","Client pricing & pitching guide","1:1 portfolio critique"]},
+
+{id:"doctor",name:"Doctor (MBBS)",icon:"🩺",tagline:"Heal people and earn lifelong trust.",
+ desc:"Doctors diagnose and treat illness, guiding patients through some of their hardest moments. A long path, but one of the most respected and meaningful careers.",
+ skills:["Biology & Chemistry","Patience","Empathy","Memory & discipline","Calm under pressure"],
+ roadmap:[
+   {t:"Strong Class 11-12 base",d:"Focus deeply on Physics, Chemistry and Biology (PCB)."},
+   {t:"Crack NEET",d:"Prepare seriously for the NEET entrance exam with a structured study plan."},
+   {t:"Complete MBBS",d:"5.5 years of MBBS covering theory, labs and clinical rotations."},
+   {t:"Specialize (optional)",d:"Pursue MD/MS in a specialty after MBBS if you want to specialize."}
+ ],
+ time:"5.5+ years after Class 12",
+ tips:"Start NEET-focused study from Class 11 itself — the syllabus is too large to rush in one year.",
+ resources:{youtube:["Physics Wallah (NEET)","Unacademy NEET","Vedantu Biotonic"],blogs:["NTA official updates","NEET prep forums"],tools:["NCERT textbooks","NEET mock test apps"],courses:["NCERT-based free NEET content","Physics Wallah free batches"]},
+ premium:["Personalized NEET study planner","Weekly mock test analysis with mentor","Medical college selection guidance","Interview prep for internships"]},
+
+{id:"promptengineering",name:"Prompt Engineering",icon:"🤖",tagline:"Learn to think and speak fluently with AI.",
+ desc:"Prompt engineers design instructions that get the best results from AI models — a brand-new field mixing language, logic and curiosity about how AI thinks.",
+ skills:["Clear writing","Logical structuring","Curiosity about AI","Basic tech comfort","Iteration mindset"],
+ roadmap:[
+   {t:"Understand how AI models work",d:"Learn the basics of how large language models process instructions."},
+   {t:"Practice daily prompting",d:"Use AI tools daily for real tasks and study what makes a prompt work well."},
+   {t:"Learn prompt patterns",d:"Study structured techniques like role-setting, examples and step-by-step reasoning."},
+   {t:"Build real use-cases",d:"Design prompt workflows for a real problem — writing, coding, research or business."}
+ ],
+ time:"3–5 months to a strong working level",
+ tips:"The best prompt engineers are simply excellent, precise writers — reading and writing well matters more than any tool.",
+ resources:{youtube:["AI Explained","Prompt Engineering by DeepLearning.AI"],blogs:["Anthropic's documentation","OpenAI blog"],tools:["Claude","ChatGPT","Notion AI"],courses:["DeepLearning.AI Prompt Engineering (free)","Anthropic's prompting guide"]},
+ premium:["Real business use-case projects","Prompt portfolio for job applications","Advanced technique deep-dives","1:1 feedback on your prompt library"]},
+
+{id:"lawyer",name:"Lawyer",icon:"⚖️",tagline:"Argue for justice and protect people's rights.",
+ desc:"Lawyers advise, represent and argue for clients — in courtrooms, contracts or corporate deals. A career built on logic, language and standing firm.",
+ skills:["Reading & comprehension","Argumentation","Research","Public speaking","Attention to detail"],
+ roadmap:[
+   {t:"Prepare for CLAT/law entrance",d:"Build strong reading, reasoning and current affairs habits from Class 11."},
+   {t:"Complete a law degree",d:"Pursue a 5-year integrated law course (BA LLB) or 3-year LLB after graduation."},
+   {t:"Intern regularly",d:"Intern with law firms, chambers or NGOs every semester to build real experience."},
+   {t:"Choose your path",d:"Decide between litigation, corporate law, or judiciary and specialize accordingly."}
+ ],
+ time:"5 years after Class 12 (integrated)",
+ tips:"Start reading judgments and legal news early — comprehension speed matters more than memorization.",
+ resources:{youtube:["LawSikho","Legal Wires"],blogs:["Bar & Bench","LiveLaw"],tools:["SCC Online (student access)","Indian Kanoon"],courses:["LawSikho free resources","CLAT prep apps"]},
+ premium:["CLAT structured study plan","Internship application toolkit","Moot court prep guidance","Mentor calls with practicing lawyers"]},
+
+{id:"appdev",name:"App / Software Development",icon:"📲",tagline:"Build the apps on everyone's phone.",
+ desc:"Software developers write the code behind apps, games and systems — a broad, high-demand field with room to specialize in mobile, backend or systems work.",
+ skills:["Programming logic","A language (Python/Java/Kotlin)","Problem solving","Debugging patience","Data structures basics"],
+ roadmap:[
+   {t:"Learn programming fundamentals",d:"Pick one language and master variables, loops, functions and logic."},
+   {t:"Learn data structures & algorithms",d:"Understand arrays, recursion and basic problem-solving patterns."},
+   {t:"Build small apps",d:"Create 3-4 small apps or tools to apply what you've learned."},
+   {t:"Contribute & apply",d:"Contribute to open-source or build a capstone project, then start applying."}
+ ],
+ time:"8–12 months to job-ready basics",
+ tips:"Consistency beats intensity — 1 hour of daily coding beats a 6-hour weekend binge.",
+ resources:{youtube:["CodeWithHarry","Apna College","Love Babbar"],blogs:["GeeksforGeeks","LeetCode Discuss"],tools:["VS Code","GitHub","LeetCode"],courses:["freeCodeCamp","CS50 by Harvard (free)"]},
+ premium:["DSA problem roadmap with mentor check-ins","Capstone project guidance","Mock coding interviews","Resume + LinkedIn optimization"]},
+
+{id:"uiux",name:"UI/UX Design",icon:"🧩",tagline:"Design products people find easy to use.",
+ desc:"UI/UX designers shape how apps and websites feel to use — balancing beauty with usability. Great for people who like solving problems visually.",
+ skills:["Empathy for users","Wireframing","Visual design","Basic research","Attention to detail"],
+ roadmap:[
+   {t:"Learn UX fundamentals",d:"Study user research, wireframing and design thinking basics."},
+   {t:"Learn a design tool",d:"Get hands-on with Figma — the industry-standard UI/UX tool."},
+   {t:"Redesign real apps",d:"Pick apps you use daily and redesign a screen to build a portfolio."},
+   {t:"Case studies & portfolio",d:"Write clear case studies explaining your design decisions."}
+ ],
+ time:"5–7 months to a strong portfolio",
+ tips:"A great case study explaining your thinking matters more than a pretty screen with no context.",
+ resources:{youtube:["DesignCourse","AJ&Smart","CharliMarieTV"],blogs:["UX Collective","Nielsen Norman Group"],tools:["Figma","Maze","Notion"],courses:["Google UX Design Certificate","Figma free tutorials"]},
+ premium:["Real product redesign brief","Portfolio website build guidance","Mock design interviews","1:1 case-study review"]},
+
+{id:"contentwriting",name:"Content Writing",icon:"✍️",tagline:"Turn ideas into words that connect.",
+ desc:"Content writers create blogs, scripts, ad copy and more for brands and platforms. A flexible, low-barrier-to-entry field great for people who love language.",
+ skills:["Grammar & clarity","Research","Adapting tone","Creativity","Consistency"],
+ roadmap:[
+   {t:"Sharpen your writing",d:"Practice writing daily — short posts, essays, or product descriptions."},
+   {t:"Learn SEO writing basics",d:"Understand how to write content that's easy to read and find online."},
+   {t:"Build a writing portfolio",d:"Write 8-10 sample pieces across different formats and tones."},
+   {t:"Pitch & freelance",d:"Start pitching to blogs, startups or freelance platforms."}
+ ],
+ time:"3–5 months to start freelancing",
+ tips:"Read widely outside your comfort zone — great writers are usually great readers first.",
+ resources:{youtube:["Ahrefs (SEO writing)","Write With Harshita"],blogs:["Copyblogger","Grammarly Blog"],tools:["Grammarly","Hemingway Editor","Google Docs"],courses:["HubSpot Content Marketing (free)"]},
+ premium:["Niche-specific writing samples","Freelance pitch email templates","Client rate negotiation guide","1:1 portfolio review"]},
+
+{id:"ca",name:"Chartered Accountant (CA)",icon:"🧮",tagline:"Master money, taxes and business decisions.",
+ desc:"Chartered Accountants manage finances, audits and taxation for individuals and companies — a rigorous but highly respected and stable career path.",
+ skills:["Numbers & accuracy","Discipline","Ethics","Analytical thinking","Patience for exams"],
+ roadmap:[
+   {t:"Enroll in CA Foundation",d:"Register after Class 12 and build strong accounting fundamentals."},
+   {t:"Clear CA Intermediate",d:"Study both groups covering accounting, law, tax and costing."},
+   {t:"Complete Articleship",d:"3 years of practical training under a practicing CA firm."},
+   {t:"Clear CA Final",d:"Pass the final exams to officially qualify as a Chartered Accountant."}
+ ],
+ time:"4.5–5 years after Class 12",
+ tips:"Articleship years teach you more than textbooks — take them seriously, not just as a formality.",
+ resources:{youtube:["CA Nikhil Jobanputra","Ekatvam Classes"],blogs:["ICAI official updates"],tools:["ICAI study material","Tally"],courses:["ICAI free resources","CA prep apps"]},
+ premium:["Structured exam-wise study planner","Articleship firm selection guidance","Mock interviews for placements","Mentor calls with practicing CAs"]},
+
+{id:"upsc",name:"Civil Services (UPSC)",icon:"🏛️",tagline:"Serve the country and shape public life.",
+ desc:"Civil servants (IAS/IPS/IFS) run the administrative backbone of the country — a demanding but deeply impactful path for those who want to serve at scale.",
+ skills:["General awareness","Essay writing","Discipline","Current affairs","Long-term patience"],
+ roadmap:[
+   {t:"Build a reading habit",d:"Start reading newspapers and NCERT books from an early age."},
+   {t:"Choose optional subject",d:"After graduation, select a strong optional subject and cover the syllabus."},
+   {t:"Clear Prelims & Mains",d:"Prepare systematically for the two-stage written exam."},
+   {t:"Interview preparation",d:"Practice mock interviews to build confidence for the final round."}
+ ],
+ time:"2–3 years of focused preparation (post-graduation)",
+ tips:"Consistency over years matters far more than short bursts of intense study before the exam.",
+ resources:{youtube:["StudyIQ","Unacademy UPSC"],blogs:["PIB updates","The Hindu editorials"],tools:["NCERT books","Current affairs apps"],courses:["StudyIQ free lectures","Vision IAS materials"]},
+ premium:["Personalized prelims + mains study plan","Answer-writing evaluation by mentor","Mock interview panels","Optional subject strategy sessions"]},
+
+{id:"mechanical",name:"Mechanical Engineering",icon:"⚙️",tagline:"Design the machines that build the world.",
+ desc:"Mechanical engineers design, build and maintain machines — from car engines to factory robots. A hands-on field for people who like understanding how things work.",
+ skills:["Physics & math","Spatial thinking","CAD basics","Problem solving","Hands-on curiosity"],
+ roadmap:[
+   {t:"Strong PCM foundation",d:"Build a solid base in Physics, Chemistry and Math through Class 12."},
+   {t:"Clear engineering entrance",d:"Prepare for JEE or state engineering entrance exams."},
+   {t:"Learn core subjects & CAD",d:"Study thermodynamics, mechanics and learn CAD tools like AutoCAD/SolidWorks."},
+   {t:"Internships & projects",d:"Do hands-on internships and build small mechanical projects."}
+ ],
+ time:"4 years after Class 12",
+ tips:"Join a robotics or design club early — hands-on projects teach more than lecture theory alone.",
+ resources:{youtube:["NPTEL Mechanical","The Efficient Engineer"],blogs:["Mechanical Engineering HQ"],tools:["AutoCAD","SolidWorks","MATLAB"],courses:["NPTEL free courses","Coursera Mechanical Basics"]},
+ premium:["CAD project portfolio guidance","Internship application support","Core company interview prep","Mentor calls with working engineers"]},
+
+{id:"psychology",name:"Psychology / Counselling",icon:"🧠",tagline:"Help people understand their own minds.",
+ desc:"Psychologists and counsellors help people work through emotional and mental challenges — a growing, meaningful field as mental health awareness rises.",
+ skills:["Empathy","Active listening","Patience","Research basics","Ethics & confidentiality"],
+ roadmap:[
+   {t:"Study psychology basics",d:"Take psychology as a subject and read introductory texts on human behavior."},
+   {t:"Pursue a BA/BSc in Psychology",d:"Build strong theoretical understanding through an undergraduate degree."},
+   {t:"Specialize with a Master's",d:"Choose clinical, counselling or organizational psychology for a Master's."},
+   {t:"Supervised practice",d:"Complete supervised counselling hours before practicing independently."}
+ ],
+ time:"5–6 years including Master's",
+ tips:"Volunteer at helplines or student wellness clubs early to see if the emotional side of this work suits you.",
+ resources:{youtube:["Psych2Go","CrashCourse Psychology"],blogs:["APA articles","Psychology Today"],tools:["Journaling apps","Basic research databases"],courses:["Coursera Intro to Psychology (free)"]},
+ premium:["Career specialization guidance (clinical vs counselling)","Supervised practice pathway planning","Case-study discussion sessions","Mentor calls with practicing counsellors"]},
+
+{id:"teaching",name:"Teaching / EdTech",icon:"📖",tagline:"Shape how the next generation learns.",
+ desc:"Teachers and edtech creators help students learn — in classrooms or online. A career combining subject mastery with the ability to explain things simply.",
+ skills:["Subject mastery","Communication","Patience","Content creation (for edtech)","Empathy"],
+ roadmap:[
+   {t:"Master your subject",d:"Get strong at the subject you want to teach through your degree."},
+   {t:"Learn how to teach",d:"Pursue a B.Ed or take teaching workshops to learn pedagogy."},
+   {t:"Practice explaining",d:"Tutor juniors or create short explainer videos to build the skill of simplifying."},
+   {t:"Choose your format",d:"Decide between classroom teaching, online tutoring, or edtech content creation."}
+ ],
+ time:"3–4 years depending on path",
+ tips:"Start tutoring even 1-2 students early — real teaching experience teaches you more than any course.",
+ resources:{youtube:["Khan Academy","Physics Wallah"],blogs:["Edutopia"],tools:["Google Classroom","Canva for slides"],courses:["Coursera Teaching Certificates (free audit)"]},
+ premium:["Content creation & teaching portfolio","B.Ed / certification guidance","Online tutoring platform setup help","Mentor calls with edtech creators"]}
+];
+
+/* filter chips */
+const filterRow = document.getElementById('filter-row');
+const chips = ["All","Tech","Creative","Medical & Law","Government & Finance","People-focused"];
+const chipMap = {
+  "Tech":["webdev","datasci","promptengineering","appdev","uiux"],
+  "Creative":["graphicdesign","contentwriting","uiux"],
+  "Medical & Law":["doctor","lawyer","psychology"],
+  "Government & Finance":["ca","upsc"],
+  "People-focused":["doctor","psychology","teaching","digitalmarketing"]
+};
+chips.forEach((c,i)=>{
+  const btn=document.createElement('button');
+  btn.className='filter-chip'+(i===0?' active':'');
+  btn.textContent=c;
+  btn.onclick=()=>{
+    document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCareers(c);
+  };
+  filterRow.appendChild(btn);
+});
+
+function renderCareers(filter="All"){
+  const visGrid=document.getElementById('career-grid-visible');
+  const hidGrid=document.getElementById('career-grid-hidden');
+  visGrid.innerHTML="";
+  hidGrid.innerHTML="";
+  hidGrid.classList.remove('show');
+  const wrapBtn=document.getElementById('career-explore-btn');
+  if(wrapBtn) wrapBtn.style.display='inline-flex';
+
+  const list = filter==="All" ? careers : careers.filter(c=>chipMap[filter].includes(c.id));
+  list.forEach((c,i)=>{
+    const el=document.createElement('div');
+    el.className='card career-card reveal';
+    el.onclick=()=>openCareer(c.id);
+    el.innerHTML=`
+      <span class="career-icon">${c.icon}</span>
+      <h3>${c.name}</h3>
+      <p>${c.tagline}</p>
+      <div class="career-tags">${c.skills.slice(0,2).map(s=>`<span class="career-tag">${s}</span>`).join('')}</div>
+      <div class="career-open">View free roadmap <span>→</span></div>
+    `;
+    (i<2 ? visGrid : hidGrid).appendChild(el);
+  });
+  if(wrapBtn) wrapBtn.style.display = list.length>2 ? 'inline-flex' : 'none';
+  observeReveals();
+}
+renderCareers();
+
+function openCareer(id){
+  const c=careers.find(x=>x.id===id);
+  const modal=document.getElementById('career-modal');
+  const panel=document.getElementById('modal-panel-content');
+  panel.innerHTML=`
+    <button class="modal-close" onclick="closeCareer()">✕</button>
+    <div class="modal-head"><span class="icon">${c.icon}</span><div><h2 style="font-size:1.5rem;">${c.name}</h2><p style="color:var(--text-dim);font-size:0.92rem;">${c.tagline}</p></div></div>
+    <div class="modal-time">⏱ ${c.time}</div>
+    <p style="color:var(--text-dim);">${c.desc}</p>
+
+    <div class="modal-section-label">Beginner skills needed</div>
+    <div class="skill-pill-row">${c.skills.map(s=>`<span class="skill-pill">${s}</span>`).join('')}</div>
+
+    <div class="modal-section-label">Free step-by-step roadmap</div>
+    <div class="roadmap-path">
+      ${c.roadmap.map(r=>`<div class="road-step"><h4>${r.t}</h4><p>${r.d}</p></div>`).join('')}
+    </div>
+
+    <div class="tip-box">💡 Beginner tip: ${c.tips}</div>
+
+    <div class="modal-section-label">Free resources</div>
+    <div class="resource-cols">
+      <div class="resource-col"><h5>YouTube</h5><ul>${c.resources.youtube.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="resource-col"><h5>Blogs & sites</h5><ul>${c.resources.blogs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="resource-col"><h5>Free tools</h5><ul>${c.resources.tools.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="resource-col"><h5>Free courses</h5><ul>${c.resources.courses.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    </div>
+
+    <div class="premium-box">
+      <h4>💼 Premium roadmap (paid)</h4>
+      <ul>${c.premium.map(p=>`<li>${p}</li>`).join('')}</ul>
+      <button class="btn btn-primary btn-small" onclick="showToast('Premium roadmap for ${c.name} added to cart — demo only 🎉')">Unlock Premium Roadmap — ₹999</button>
+    </div>
+  `;
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeCareer(){
+  document.getElementById('career-modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.getElementById('career-modal').addEventListener('click',e=>{
+  if(e.target.id==='career-modal') closeCareer();
+});
+
+/* ========================================================================
+   QUIZ LOGIC — single-select, auto-advance, back button, loading + bounce
+======================================================================== */
+const quizQuestions=[
+ {q:"Which activity excites you the most?",opts:[
+   {t:"Solving a tricky logic puzzle",s:{webdev:3,promptengineering:3,datasci:2,appdev:2}},
+   {t:"Sketching or designing something visual",s:{graphicdesign:3,uiux:3}},
+   {t:"Convincing someone of your point of view",s:{digitalmarketing:2,lawyer:3,upsc:2}},
+   {t:"Helping someone who's upset or hurt",s:{doctor:3,psychology:3,teaching:2}}
+ ]},
+ {q:"In a group project, you naturally...",opts:[
+   {t:"Take charge and organize the plan",s:{ca:2,upsc:3,lawyer:2}},
+   {t:"Dig deep into research and details",s:{datasci:3,doctor:2,psychology:2}},
+   {t:"Handle the visuals and presentation",s:{graphicdesign:3,uiux:2,contentwriting:1}},
+   {t:"Write the report or explain it clearly",s:{contentwriting:3,lawyer:2,teaching:2}}
+ ]},
+ {q:"Your favourite subject in school is...",opts:[
+   {t:"Math",s:{datasci:3,ca:3,mechanical:2}},
+   {t:"Biology",s:{doctor:3,psychology:2}},
+   {t:"Computer Science",s:{webdev:3,appdev:3,promptengineering:2}},
+   {t:"English / Social Studies",s:{contentwriting:2,lawyer:2,upsc:3,teaching:2}}
+ ]},
+ {q:"In your free time you'd rather...",opts:[
+   {t:"Tinker with gadgets or watch tech videos",s:{webdev:2,appdev:2,mechanical:3,promptengineering:2}},
+   {t:"Sketch, edit photos, or design posts",s:{graphicdesign:3,uiux:3}},
+   {t:"Debate current events with friends",s:{lawyer:3,upsc:3,digitalmarketing:1}},
+   {t:"Journal, read novels, or write stories",s:{contentwriting:3,psychology:2}}
+ ]},
+ {q:"People usually describe you as...",opts:[
+   {t:"Logical and curious",s:{datasci:3,promptengineering:3,appdev:2}},
+   {t:"Creative and artistic",s:{graphicdesign:3,uiux:2,contentwriting:2}},
+   {t:"Empathetic and caring",s:{doctor:3,psychology:3,teaching:3}},
+   {t:"Confident and persuasive",s:{digitalmarketing:3,lawyer:2,upsc:2}}
+ ]},
+ {q:"Which problem would you enjoy solving?",opts:[
+   {t:"Why an app keeps crashing",s:{webdev:3,appdev:3}},
+   {t:"Why a brand's sales are dropping",s:{digitalmarketing:3,ca:1}},
+   {t:"Why a patient feels unwell",s:{doctor:3,psychology:1}},
+   {t:"Why a machine part keeps failing",s:{mechanical:3}}
+ ]},
+ {q:"Your dream workplace looks like...",opts:[
+   {t:"A tech startup with laptops everywhere",s:{webdev:2,appdev:2,promptengineering:2,datasci:2}},
+   {t:"A hospital or clinic",s:{doctor:3,psychology:2}},
+   {t:"A courtroom or law office",s:{lawyer:3,upsc:1}},
+   {t:"A creative studio or ad agency",s:{graphicdesign:3,digitalmarketing:2,uiux:2}}
+ ]},
+ {q:"Pick a task you'd genuinely enjoy doing all day.",opts:[
+   {t:"Writing lines of code",s:{webdev:3,appdev:3,promptengineering:2}},
+   {t:"Writing an article or script",s:{contentwriting:3,teaching:1}},
+   {t:"Analyzing numbers in a spreadsheet",s:{datasci:3,ca:3}},
+   {t:"Listening and counselling a friend",s:{psychology:3,teaching:1}}
+ ]},
+ {q:"What's your biggest strength?",opts:[
+   {t:"Attention to detail",s:{graphicdesign:2,ca:3,uiux:2}},
+   {t:"Public speaking",s:{lawyer:3,upsc:3,teaching:2}},
+   {t:"Spotting patterns quickly",s:{datasci:3,promptengineering:2}},
+   {t:"Patience and kindness",s:{doctor:2,teaching:3,psychology:2}}
+ ]},
+ {q:"Which industry excites you the most?",opts:[
+   {t:"Technology & AI",s:{webdev:2,promptengineering:3,datasci:2,appdev:2}},
+   {t:"Healthcare & wellbeing",s:{doctor:3,psychology:2}},
+   {t:"Design & media",s:{graphicdesign:3,uiux:2,digitalmarketing:1}},
+   {t:"Law & governance",s:{lawyer:3,upsc:3}}
+ ]},
+ {q:"How do you prefer to work?",opts:[
+   {t:"Alone, deeply focused on a screen",s:{webdev:2,datasci:2,promptengineering:2,mechanical:1}},
+   {t:"Face-to-face with people",s:{doctor:2,teaching:3,psychology:2}},
+   {t:"In a fast, energetic team",s:{digitalmarketing:3,graphicdesign:1,uiux:1}},
+   {t:"Independently on files or cases",s:{lawyer:2,ca:3,upsc:2}}
+ ]},
+ {q:"What matters most to you in a career?",opts:[
+   {t:"High growth in a fast-moving field",s:{webdev:2,promptengineering:2,datasci:2,appdev:2}},
+   {t:"Respect and long-term stability",s:{doctor:3,lawyer:2,upsc:2,ca:2}},
+   {t:"Creative freedom",s:{graphicdesign:3,uiux:2,contentwriting:2}},
+   {t:"Directly helping people or society",s:{doctor:2,teaching:2,psychology:2,upsc:2}}
+ ]}
+];
+
+let currentQ=0;
+let userAnswers=[]; // store selected option index per question
+const totalQ=quizQuestions.length;
+
+function startQuiz(){
+  document.getElementById('quiz-start').style.display='none';
+  document.getElementById('quiz-live').style.display='block';
+  buildProgressDots();
+  currentQ=0;
+  userAnswers=[];
+  renderQuestion();
+}
+
+function buildProgressDots(){
+  const track=document.getElementById('quiz-progress-track');
+  track.innerHTML="";
+  for(let i=0;i<totalQ;i++){
+    const d=document.createElement('div');
+    d.className='quiz-dot';
+    d.id='dot-'+i;
+    track.appendChild(d);
+  }
+}
+function updateProgress(){
+  for(let i=0;i<totalQ;i++){
+    document.getElementById('dot-'+i).classList.toggle('filled', i<=currentQ);
+  }
+  document.getElementById('quiz-count').textContent=`Question ${currentQ+1} of ${totalQ}`;
+  document.getElementById('quiz-back-btn').disabled = currentQ===0;
+}
+
+function renderQuestion(){
+  updateProgress();
+  const holder=document.getElementById('quiz-questions-holder');
+  const qData=quizQuestions[currentQ];
+  const letters=['A','B','C','D'];
+  holder.innerHTML=`
+    <div class="quiz-question-wrap active">
+      <div class="quiz-q-title">${qData.q}</div>
+      <div class="quiz-options">
+        ${qData.opts.map((o,i)=>`
+          <button class="quiz-option ${userAnswers[currentQ]===i?'selected':''}" onclick="selectOption(${i})">
+            <span class="letter">${letters[i]}</span>${o.t}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function selectOption(i){
+  userAnswers[currentQ]=i;
+  // visual select feedback briefly before auto-advancing
+  const opts=document.querySelectorAll('.quiz-option');
+  opts.forEach(o=>o.classList.remove('selected'));
+  opts[i].classList.add('selected');
+  setTimeout(()=>{
+    if(currentQ<totalQ-1){
+      currentQ++;
+      renderQuestion();
+    } else {
+      showLoadingThenResults();
+    }
+  },320);
+}
+
+function quizBack(){
+  if(currentQ>0){
+    currentQ--;
+    renderQuestion();
+  }
+}
+
+function showLoadingThenResults(){
+  document.getElementById('quiz-live').style.display='none';
+  const loading=document.getElementById('quiz-loading');
+  loading.classList.add('active');
+  const msgs=["Matching your answers to real careers…","Weighing your interests and strengths…","Almost there — finding your best fit…"];
+  let mi=0;
+  const msgEl=document.getElementById('loading-msg');
+  const interval=setInterval(()=>{ mi=(mi+1)%msgs.length; msgEl.textContent=msgs[mi]; },700);
+  setTimeout(()=>{
+    clearInterval(interval);
+    loading.classList.remove('active');
+    computeAndShowResults();
+  },2100);
+}
+
+function computeAndShowResults(){
+  const scores={};
+  userAnswers.forEach((optIdx,qIdx)=>{
+    const opt=quizQuestions[qIdx].opts[optIdx];
+    Object.entries(opt.s).forEach(([careerId,pts])=>{
+      scores[careerId]=(scores[careerId]||0)+pts;
+    });
+  });
+  const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const maxScore=ranked.length?ranked[0][1]:1;
+
+  const holder=document.getElementById('result-cards-holder');
+  holder.innerHTML="";
+  const resultsSection=document.getElementById('quiz-results');
+  resultsSection.classList.add('active');
+
+  let shown=0;
+  ranked.forEach(([careerId,score],idx)=>{
+    const c=careers.find(x=>x.id===careerId);
+    if(!c) return;
+    const matchPct=Math.round((score/maxScore)*100);
+    const card=document.createElement('div');
+    card.className='result-card bounce-in';
+    card.style.animationDelay=(shown*0.18)+'s';
+    card.innerHTML=`
+      <div class="result-rank">#${shown+1}</div>
+      <div style="flex:1;">
+        <h3>${c.icon} ${c.name}</h3>
+        <p>${c.tagline} ${c.desc.split('.')[0]}.</p>
+        <div class="result-match">MATCH SCORE: ${matchPct}%</div>
+        <button class="btn btn-ghost btn-small" style="margin-top:12px;" onclick="closeCareer();openCareer('${c.id}')">View free roadmap →</button>
+      </div>
+    `;
+    holder.appendChild(card);
+    shown++;
+  });
+  // safety net: if scoring somehow produced no matches, still show a friendly fallback
+  if(shown===0){
+    holder.innerHTML = `<div class="result-card bounce-in" style="animation-delay:0s;">
+      <div style="flex:1;">
+        <h3>🧭 Let's try that again</h3>
+        <p>We couldn't calculate a match this time. Please retake the quiz and answer every question.</p>
+      </div>
+    </div>`;
+  }
+}
+
+function resetQuiz(){
+  document.getElementById('quiz-results').classList.remove('active');
+  document.getElementById('quiz-start').style.display='block';
+  currentQ=0;
+  userAnswers=[];
+}
+
+/* ========================================================================
+   MENTORS
+======================================================================== */
+const mentors=[
+ {name:"Ananya Rao",role:"Senior Web Developer",exp:"6+ years · ex-Flipkart",price:"₹499",init:"AR"},
+ {name:"Rohit Verma",role:"Data Scientist",exp:"5+ years · Fintech",price:"₹499",init:"RV"},
+ {name:"Dr. Sana Iqbal",role:"Resident Doctor",exp:"4+ years · Government Hospital",price:"₹299",init:"SI"},
+ {name:"Kabir Malhotra",role:"Practicing Lawyer",exp:"7+ years · Corporate Law",price:"₹499",init:"KM"},
+ {name:"Priya Nair",role:"UI/UX Designer",exp:"5+ years · SaaS Startups",price:"₹299",init:"PN"},
+ {name:"Arjun Singh",role:"Digital Marketing Lead",exp:"6+ years · D2C Brands",price:"₹299",init:"AS"}
+];
+function renderMentors(){
+  const vis=document.getElementById('mentor-grid-visible');
+  const hid=document.getElementById('mentor-grid-hidden');
+  mentors.forEach((m,i)=>{
+    const el=document.createElement('div');
+    el.className='card mentor-card reveal';
+    el.innerHTML=`
+      <div class="mentor-avatar">${m.init}</div>
+      <h3>${m.name}</h3>
+      <div class="mentor-role">${m.role}</div>
+      <div class="mentor-exp">${m.exp}</div>
+      <div class="mentor-price">${m.price} <span>/ session</span></div>
+      <button class="btn btn-primary btn-small" onclick="showToast('Booking request sent to ${m.name} — demo only 📅')">Book Session</button>
+    `;
+    (i<2?vis:hid).appendChild(el);
+  });
+  observeReveals();
+}
+renderMentors();
+
+/* ========================================================================
+   COURSES
+======================================================================== */
+const courseBundles=[
+ {badge:"Bestseller",title:"Web Dev Career Bundle",outcomes:["Build 4 real projects","Deploy your own portfolio","Git & GitHub workflow","Interview prep pack"],duration:"8 weeks",price:"₹1999",old:"₹3499"},
+ {badge:"Trending",title:"Data Science Starter Bundle",outcomes:["Python + pandas from scratch","2 real dataset projects","Intro to Machine Learning","Resume for analyst roles"],duration:"10 weeks",price:"₹1999",old:"₹3999"},
+ {badge:"Popular",title:"UI/UX Design Bundle",outcomes:["Figma from zero to portfolio","3 case-study projects","Mock design interviews","Portfolio website guide"],duration:"6 weeks",price:"₹999",old:"₹1999"},
+ {badge:"New",title:"Digital Marketing Bundle",outcomes:["SEO + social + ads basics","Run a real mini campaign","Analytics dashboard reading","Freelance pitch templates"],duration:"6 weeks",price:"₹999",old:"₹1799"},
+ {badge:"High demand",title:"NEET Foundation Bundle",outcomes:["Class 11-12 concept clarity","Weekly mock tests","Personalized study planner","Doubt-solving sessions"],duration:"12 weeks",price:"₹1999",old:"₹3499"},
+ {badge:"For beginners",title:"Prompt Engineering Bundle",outcomes:["Core prompting techniques","5 real-world use cases","Prompt portfolio for jobs","1:1 feedback session"],duration:"4 weeks",price:"₹999",old:"₹1599"}
+];
+function renderCourses(){
+  const vis=document.getElementById('course-grid-visible');
+  const hid=document.getElementById('course-grid-hidden');
+  courseBundles.forEach((c,i)=>{
+    const el=document.createElement('div');
+    el.className='card course-card reveal';
+    el.innerHTML=`
+      <div class="course-top">
+        <span class="course-badge">${c.badge}</span>
+        <h3>${c.title}</h3>
+        <ul class="course-outcomes">${c.outcomes.map(o=>`<li>${o}</li>`).join('')}</ul>
+      </div>
+      <div class="course-bottom">
+        <div>
+          <div class="course-price"><span class="old">${c.old}</span>${c.price}</div>
+          <div class="course-duration">${c.duration}</div>
+        </div>
+        <button class="btn btn-primary btn-small" onclick="showToast('${c.title} added — demo checkout 🛒')">Buy Now</button>
+      </div>
+    `;
+    (i<2?vis:hid).appendChild(el);
+  });
+  observeReveals();
+}
+renderCourses();
+
+function revealMore(id, btn){
+  const el=document.getElementById(id);
+  el.classList.add('show');
+  btn.style.display='none';
+  observeReveals();
+}
+
+/* ========================================================================
+   MOTIVATION STRIP
+======================================================================== */
+const motivations=["Your career won't be decided in one day — but it starts with one step.","Confused is just the first step before clear.","Small consistent steps beat big confused leaps.","You don't need to have it all figured out today.","Every expert was once exactly where you are now."];
+const track=document.getElementById('motivation-track');
+const doubled=[...motivations,...motivations];
+track.innerHTML = doubled.map(m=>`<span>${m}</span>`).join('');
+
+/* ========================================================================
+   RESUME MOCK UPLOAD
+======================================================================== */
+function mockResumeUpload(){
+  const fb=document.getElementById('resume-feedback');
+  fb.classList.toggle('show');
+}
+
+/* ========================================================================
+   CONTACT FORM
+======================================================================== */
+function handleContact(e){
+  e.preventDefault();
+  showToast("Message sent! A mentor will get back to you soon 💜");
+  e.target.reset();
+}
+
+/* ========================================================================
+   TOAST
+======================================================================== */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* ========================================================================
+   THEME TOGGLE (dark by default; in-memory only for this session —
+   artifacts can't use localStorage/sessionStorage)
+======================================================================== */
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light-theme');
+  document.getElementById('theme-icon').textContent = isLight ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = isLight ? 'Light' : 'Dark';
+}
+
+/* ========================================================================
+   MOBILE NAV
+======================================================================== */
+function toggleMobileNav(){
+  const links=document.querySelector('.nav-links');
+  const isOpen = links.style.display==='flex';
+  links.style.display = isOpen ? 'none' : 'flex';
+  links.style.cssText += isOpen ? '' : `
+    position:absolute;top:64px;left:0;right:0;background:var(--bg-elev);
+    flex-direction:column;padding:24px;gap:18px;border-bottom:1px solid var(--line);
+  `;
+}
+
+/* Smooth-scroll to a section by id, without using href="#..." links
+   (those get intercepted as "external navigation" inside some mobile
+   in-app browsers / file previewers, which is why the quiz section
+   wouldn't open). */
+function goTo(id){
+  const el=document.getElementById(id);
+  if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+  // close mobile menu if it's open
+  const links=document.querySelector('.nav-links');
+  if(links && links.style.display==='flex' && window.innerWidth<=860){
+    links.style.display='none';
+  }
+}
+
+/* ========================================================================
+   SCROLL REVEAL OBSERVER
+======================================================================== */
+function observeReveals(){
+  const els=document.querySelectorAll('.reveal:not(.in)');
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  },{threshold:0.12});
+  els.forEach(el=>io.observe(el));
+}
+observeReveals();
+
+/* nav background on scroll */
+window.addEventListener('scroll',()=>{
+  const nav=document.getElementById('navbar');
+  const scrolled=window.scrollY>40;
+  nav.style.background = scrolled ? 'var(--nav-bg-2)' : 'var(--nav-bg-1)';
+});
+</script>
+</body>
+</html>
